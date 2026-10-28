@@ -28,6 +28,24 @@ describe("toPath", () => {
         );
         expect(toPath("file:///tmp/a%23b%25c")).toBe("/tmp/a#b%c");
     });
+
+    test("resolves a relative path against a base directory", () => {
+        expect(toPath("processors/echo.ttl", "/etc/rdfc")).toBe(
+            "/etc/rdfc/processors/echo.ttl",
+        );
+        expect(toPath("../echo.ttl", "/etc/rdfc/")).toBe("/etc/echo.ttl");
+        expect(toPath("echo.ttl", "file:///etc/my%20rdfc/")).toBe(
+            "/etc/my rdfc/echo.ttl",
+        );
+    });
+
+    test("keeps absolute paths and URLs, whatever the base directory", () => {
+        expect(toPath("/tmp/out.txt", "/etc/rdfc")).toBe("/tmp/out.txt");
+        expect(toPath("file:///tmp/out.txt", "/etc/rdfc")).toBe("/tmp/out.txt");
+        expect(toPath("https://example.org/data.ttl", "/etc/rdfc")).toBe(
+            "https://example.org/data.ttl",
+        );
+    });
 });
 
 describe("fromPath", () => {
@@ -59,6 +77,21 @@ describe("fromPath", () => {
 
     test("reads a drive letter as a path, not a scheme", () => {
         expect(fromPath("C:/data")).not.toBe("C:/data");
+    });
+
+    test("resolves a relative path against a base directory", () => {
+        expect(fromPath("state.json", "/etc/my rdfc")).toBe(
+            "file:///etc/my%20rdfc/state.json",
+        );
+        expect(fromPath("state.json", "file:///etc/rdfc/")).toBe(
+            "file:///etc/rdfc/state.json",
+        );
+        expect(fromPath("/tmp/out.txt", "/etc/rdfc")).toBe(
+            "file:///tmp/out.txt",
+        );
+        expect(fromPath("https://example.org/data.ttl", "/etc/rdfc")).toBe(
+            "https://example.org/data.ttl",
+        );
     });
 });
 
